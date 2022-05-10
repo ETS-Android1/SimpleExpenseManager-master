@@ -16,14 +16,52 @@
 
 package lk.ac.mrt.cse.dbs.simpleexpensemanager;
 
-import android.app.Application;
-import android.test.ApplicationTestCase;
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.ExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.PersistentExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
  */
-public class ApplicationTest extends ApplicationTestCase<Application> {
-    public ApplicationTest() {
-        super(Application.class);
+public class ApplicationTest{
+    private ExpenseManager expenseManager;
+
+    @Before
+    public void setUp(){
+        Context context = ApplicationProvider.getApplicationContext();
+        expenseManager = new PersistentExpenseManager(context);
     }
+
+    @Test
+    public void testAccount(){
+        expenseManager.addAccount("1234N","Savings Bank","Jerry",24000);
+        List<String> accountNumbers = expenseManager.getAccountNumbersList();
+        assertTrue(accountNumbers.contains("1234N"));
+    }
+
+    @Test
+    public void testTransaction() throws ParseException {
+        Date date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2022");
+        expenseManager.getTransactionsDAO().logTransaction(date,"1234N",ExpenseType.INCOME,1000);
+        List<Transaction> transactions = expenseManager.getTransactionsDAO().getPaginatedTransactionLogs(1);
+        Transaction transaction = transactions.get(0);
+        assertTrue(transaction.getAccountNo().equals("1234N") && transaction.getAmount() == 1000);
+    }
+
+
 }
